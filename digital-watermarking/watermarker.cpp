@@ -49,7 +49,7 @@ void addTextByMat(cv::Mat comImg,cv::String watermarkText,cv::Point point,double
     flip(comImg, comImg, -1);
 }
 
-cv::Mat transFormMatWithText(cv::Mat srcImg, cv::String watermarkText,double fontSize) {
+extern "C" cv::Mat transFormMatWithText(cv::Mat srcImg, cv::String watermarkText,double fontSize) {
         cv::Mat padded=getBlueChannel(srcImg);
         padded.convertTo(padded, CV_32F);
         cv::Mat comImg = getDftMat(padded);
@@ -72,7 +72,7 @@ cv::Mat transFormMatWithText(cv::Mat srcImg, cv::String watermarkText,double fon
         return backImage;
 }
 
-cv::Mat getTextFormMat(cv::Mat backImage) {
+extern "C" cv::Mat getTextFormMat(cv::Mat backImage) {
         cv::Mat padded=getBlueChannel(backImage);
         padded.convertTo(padded, CV_32F);
         cv::Mat comImg = getDftMat(padded);
