@@ -1,39 +1,50 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include "watermarker.h"
 
 static PyObject* transformImageWithText(PyObject *self, PyObject *args, PyObject *kwargs) {
-    v8::String::Utf8Value str0(info[0]->ToString());
-    const char* filename= ToCString(str0);
-    v8::String::Utf8Value str1(info[1]->ToString());
-    const char* watermarkText= ToCString(str1);
-    double fontSize = info[2]->NumberValue();
-    v8::String::Utf8Value str3(info[3]->ToString());
-    const char* outfilename= ToCString(str3);
+    char *filename;
+    char *watermarkText;
+    double fontSize;
+    char* outfilename;
+
+    static char *kwlist[] = {"filename", "text", "font_size", "output", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ssds", kwlist, &filename, &watermarkText, &fontSize, &outfilename))
+        return NULL;
+
     cv::Mat srcImg = cv::imread(filename);
-    if (srcImg.empty()){Nan::ThrowTypeError("read image failed");}
     cv::Mat comImg = transFormMatWithText(srcImg, watermarkText,fontSize);
     bool res = cv::imwrite(outfilename,comImg);
-    info.GetReturnValue().Set(res);
+
+    if (res)
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
 }
 
 static PyObject* getTextFormImage(PyObject *self, PyObject *args, PyObject *kwargs) {
-    if (!PyArg_ParseTuple(args, "s", &command))
+    char *filename;
+    char *backfilename;
+    double fontSize;
+
+    static char *kwlist[] = {"filename", "backfilename", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ss", kwlist, &filename, &backfilename))
         return NULL;
-    v8::String::Utf8Value str0(info[0]->ToString());
-    const char* filename= ToCString(str0);
-    v8::String::Utf8Value str1(info[1]->ToString());
-    const char* backfilename= ToCString(str1);
 
     cv::Mat comImg = cv::imread(filename);
     cv::Mat backImage = getTextFormMat(comImg);
     bool res = cv::imwrite(backfilename,backImage);
-    info.GetReturnValue().Set(res);
+
+    if (res)
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
 }
 
 static PyMethodDef DigitalWatermarkingMethods[] = {
-    {"transform_image_with_text",  transformImageWithText, METH_VARARGS | METH_KEYWORDS,
+    {"transform_image_with_text",  (PyCFunction)transformImageWithText, METH_VARARGS | METH_KEYWORDS,
      "Embeds a text into image"},
-    {"get_text_from_image",  getTextFormImage, METH_VARARGS | METH_KEYWORDS,
+    {"get_text_from_image",  (PyCFunction)getTextFormImage, METH_VARARGS | METH_KEYWORDS,
      "Extracts text from image"},
     {NULL, NULL, 0, NULL}
 };
@@ -47,7 +58,6 @@ static struct PyModuleDef digitalwatermarkingmodule = {
     DigitalWatermarkingMethods
 };
 
-PyMODINIT_FUNC PyInit_digitalwatermarking(void)
-{
+PyMODINIT_FUNC PyInit_digitalwatermarking(void) {
     return PyModule_Create(&digitalwatermarkingmodule);
 }
